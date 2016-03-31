@@ -45,7 +45,7 @@ Mine [] mines = new Mine [nMines];
 final int MAX_RESET = 2;        // Max number of times a mine can be reset
 
 Torpedo t1;                     // Torpedo object
-int nTorpedos = 6;              // Can use the torpedo this many times max
+int nTorpedos = 50;              // Can use the torpedo this many times max
 
 Bubbles b1;                     // Does the bubbles
 
