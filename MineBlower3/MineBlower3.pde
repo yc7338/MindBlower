@@ -40,9 +40,9 @@ Sub sub;
 int nEels = 9;
 Eel [] eels = new Eel [nEels];
 
-int nMines = 6;
+int nMines = 12;
 Mine [] mines = new Mine [nMines];
-final int MAX_RESET = 2;        // Max number of times a mine can be reset
+final int MAX_RESET = 0;        // Max number of times a mine can be reset
 
 Torpedo t1;                     // Torpedo object
 int nTorpedos = 50;              // Can use the torpedo this many times max
