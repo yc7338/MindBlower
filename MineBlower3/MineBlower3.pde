@@ -37,15 +37,15 @@ Graphics gr = new Graphics();
 
 Sub sub;
 
-int nEels = 9;
+int nEels = 7;
 Eel [] eels = new Eel [nEels];
 
-int nMines = 12;
+int nMines = 6;
 Mine [] mines = new Mine [nMines];
-final int MAX_RESET = 0;        // Max number of times a mine can be reset
+final int MAX_RESET = 1;        // Max number of times a mine can be reset
 
 Torpedo t1;                     // Torpedo object
-int nTorpedos = 50;              // Can use the torpedo this many times max
+int nTorpedos = 10;              // Can use the torpedo this many times max
 
 Bubbles b1;                     // Does the bubbles
 
@@ -64,6 +64,7 @@ boolean firstDetonate = false;
 boolean firstEel = false;
 boolean heavyDamage = false;
 boolean starting = true;
+int startWait = 300;
 int minesCleared = 0;
 
 float backOff = 0.0;            // Background hue offset for Perlin noise
@@ -111,6 +112,7 @@ void draw()
       sc.splashScreen();
   } else if (gameState == 3)      // Game state 3: Game over, sub sunk
   {
+    aud.hRSSong.pauseAll();
     sc.youSankScreen();
   } else if (gameState == 4 && winWait <= 0) // State 4: Game over, player won!
   {
@@ -122,6 +124,7 @@ void draw()
       winWait--;
       if (winWait == 0)
       {
+        aud.hRSSong.pauseAll(); 
         aud.bkgdMus.xFade(2);
         aud.safePlay(aud.winSnd);     // Trigger win sound only once
       }
@@ -135,16 +138,23 @@ void draw()
       hRSSongTrk = 0;
       aud.hRSSong.trigTrans(hRSSongTrk);
       starting = false;
+      
+      hRSDiaLine  = 0;
+      aud.hRSDialog.trigTrans(hRSDiaLine);
     }
+    
+    startWait--;
+    if (startWait == 0)
+    {
+      hRSDiaLine  = 3;
+      aud.hRSDialog.trigTrans(hRSDiaLine);
+    }
+    
     if (!heavyDamage && sc.health < 50)
     {
       heavyDamage = true;
       hRSDiaLine  = 1;
       aud.hRSDialog.trigTrans(hRSDiaLine);
-    }
-    if (sc.health <= 0)
-    {
-      aud.hRSSong.pauseAll();
     }
     
     b1.move();                        // Animate the bubbles
@@ -182,7 +192,7 @@ void draw()
       {
         if (!firstEel)
         {
-          hRSDiaLine  = 3;
+          hRSDiaLine  = 2;
           aud.hRSDialog.trigTrans(hRSDiaLine);
           firstEel = true;
         }
@@ -323,9 +333,6 @@ void updateHorizontal() {
   case 10:
     hRSSongTrk = 5;
     aud.hRSSong.trigTrans(hRSSongTrk);
-    break;
-  case 12:
-    aud.hRSSong.pauseAll();
     break;
   default:
     break;
