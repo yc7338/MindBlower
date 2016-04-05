@@ -15,7 +15,7 @@
  
  Methods:
  update() - Must be called once per frame, likely in update section of draw()
- trigTrans() - Trigger (schedule) a transition to another track
+ trigTrans() - Trigger (schedule) a transition to another track         
  reset() - Resets the object to its initial state to restart the sequence
  setGain() - Sets gain levels for all the sounds to the level passed in
  */

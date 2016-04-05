@@ -13,13 +13,13 @@
  audio triggered by events that are not linked to audio yet.
  The ambient sounds and dialog assets are in this category, as there
  are no placeholder sounds for them.
-
+ 
  However, there are test sound banks for the MultiSound, HorReSeq and
  VertReMix classes, which are triggered by keystrokes handled in the
  keyPressed() handler. In an actual game, these calls would happen
  when notable events occur during gameplay.
  */
- 
+
 import ddf.minim.spi.*;   // Set up the audio library
 import ddf.minim.signals.*;
 import ddf.minim.*;
@@ -54,11 +54,17 @@ Score sc;                       // Handles score and health
 boolean downPressed = false;    // True when DOWN arrow is pressed
 boolean leftPressed = false;    // Ditto LEFT arrow
 boolean rightPressed = false;   // Ditto RIGHT arrow
-                                // No upPressed; sub naturally buoyant
+// No upPressed; sub naturally buoyant
 boolean showInstruct = false;
 
 int gameState = 0;              // 0 intro, 1 play, 2 sinking, 3 sunk, 4 won
 int winWait = 100;              // Give animations time to finish if won
+
+boolean firstDetonate = false;
+boolean firstEel = false;
+boolean heavyDamage = false;
+boolean starting = true;
+int minesCleared = 0;
 
 float backOff = 0.0;            // Background hue offset for Perlin noise
 
@@ -103,16 +109,13 @@ void draw()
       sc.instructions();
     else
       sc.splashScreen();
-  }
-  else if (gameState == 3)      // Game state 3: Game over, sub sunk
+  } else if (gameState == 3)      // Game state 3: Game over, sub sunk
   {
     sc.youSankScreen();
-  }
-  else if (gameState == 4 && winWait <= 0) // State 4: Game over, player won!
+  } else if (gameState == 4 && winWait <= 0) // State 4: Game over, player won!
   {
     sc.youWonScreen();
-  }
-  else // gameState 1: still in the game, or gameState 4: waiting to win
+  } else // gameState 1: still in the game, or gameState 4: waiting to win
   {
     if (gameState == 4)               // Game state 4: Counting down to win
     {
@@ -127,11 +130,28 @@ void draw()
 
     // Update for game state 1 ////////////////////////////////////////////
     
+    if (starting)
+    {
+      hRSSongTrk = 0;
+      aud.hRSSong.trigTrans(hRSSongTrk);
+      starting = false;
+    }
+    if (!heavyDamage && sc.health < 50)
+    {
+      heavyDamage = true;
+      hRSDiaLine  = 1;
+      aud.hRSDialog.trigTrans(hRSDiaLine);
+    }
+    if (sc.health <= 0)
+    {
+      aud.hRSSong.pauseAll();
+    }
+    
     b1.move();                        // Animate the bubbles
 
     // Maybe create an ambient sonar ping
     aud.maybePing();
-          
+
     aud.hRSSong.update();             // Update Horizontal Resequencing
     aud.hRSDialog.update();           // objects
 
@@ -150,9 +170,9 @@ void draw()
       aud.ambSub.trigRand(sub.loc.x);
     //if (random(1000.0) < 10.0)      // Trigger sounds sequentially
     //  aud.ambSub.trigSeq(random(width));
-    
+
     if (t1.running())                 // See if the torpedo hit anything
-        checkTorpedo();
+      checkTorpedo();
 
     if (! sub.sunk())                 // Check mines for sub touches
       checkMines();
@@ -160,12 +180,18 @@ void draw()
     for (int i = 0; i < nEels; i++)   // Check eels for sub touches
       if (sub.eelTouch(eels[i]))
       {
+        if (!firstEel)
+        {
+          hRSDiaLine  = 3;
+          aud.hRSDialog.trigTrans(hRSDiaLine);
+          firstEel = true;
+        }
         sub.zap();                    // If touching, zap 'em both
         eels[i].zap();
       }
 
     // Display for game state 1 //////////////////////////////////////////
-    
+
     backOff += 0.02;                  // Subtle changes in background hue
     float hue = noise(backOff) * 20 + 122;  // ...using Perlin noise
     background(hue, 60, 220);
@@ -215,10 +241,19 @@ void checkTorpedo()
       mines[k].explode();
       t1.explode();
       sub.blast(mines[k].mineLoc());
+      minesCleared ++;
+      updateHorizontal();
+
+      if (!firstDetonate)
+      {
+        hRSDiaLine  = 4;
+        aud.hRSDialog.trigTrans(hRSDiaLine);
+        firstDetonate = true;
+      }
       sc.detonatePoints();          // Score points for hitting a mine
+
       hitMine = true;
-    }
-    else
+    } else
       k++;                     // Haven't hit one yet, so check next one
   }
 }
@@ -237,24 +272,63 @@ void checkMines()
       {
         mines[i].disarm();           // Disarm it and score points
         touchMine = true;
-      }
-      else
+        minesCleared ++;
+        updateHorizontal();
+      } else
       {
         mines[i].explode();          // Too hard or sinking, so blow it up
         sub.blast(mines[i].mineLoc());
         sc.blastPoints();
+        minesCleared ++;
+        updateHorizontal();
         touchMine = true;
       }
-    }
-    else if (sub.mineTouch(mines[i])) // Any sub touch blows it up
+    } else if (sub.mineTouch(mines[i])) // Any sub touch blows it up
     {
       mines[i].explode();
       sub.blast(mines[i].mineLoc());
       sc.blastPoints();
+      minesCleared ++;
+      updateHorizontal();
       touchMine = true;
-    }
-    else
+    } else
       i++;                     // Sub missed this mine, so check next one
+  }
+}
+
+void updateHorizontal() {
+
+  switch(minesCleared)
+  {
+  case 0:
+    hRSSongTrk = 0;
+    aud.hRSSong.trigTrans(hRSSongTrk);
+    break;
+  case 2:
+    hRSSongTrk = 1;
+    aud.hRSSong.trigTrans(hRSSongTrk);
+    break;
+  case 4:
+    hRSSongTrk = 2;
+    aud.hRSSong.trigTrans(hRSSongTrk);
+    break;
+  case 6:
+    hRSSongTrk = 3;
+    aud.hRSSong.trigTrans(hRSSongTrk);
+    break;
+  case 8:
+    hRSSongTrk = 4;
+    aud.hRSSong.trigTrans(hRSSongTrk);
+    break;
+  case 10:
+    hRSSongTrk = 5;
+    aud.hRSSong.trigTrans(hRSSongTrk);
+    break;
+  case 12:
+    aud.hRSSong.pauseAll();
+    break;
+  default:
+    break;
   }
 }
 
@@ -289,7 +363,7 @@ void keyPressed()
     aud.pauseAll();       // Pause or stop all the sounds
     exit();
   }
-  
+
   // The remaining keys are used to test Audio classes and are not
   // really part of the game.
   if (key == 'm')         // Test the HorReSeq class on looping music
@@ -322,7 +396,7 @@ void keyPressed()
     hRSDiaLine--;         // Schedule transition to PREVIOUS track
     aud.hRSDialog.trigTrans(hRSDiaLine);
   }
-  
+
   // Test VertReMix class with 4 trumpet phrases, harmonized in 3rds
   // Adds tracks one at a time until all playing, then silenes them
   // one at a time until all silent, then repeats.
