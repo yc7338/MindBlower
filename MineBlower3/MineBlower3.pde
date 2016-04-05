@@ -64,6 +64,7 @@ boolean firstDetonate = false;
 boolean firstEel = false;
 boolean heavyDamage = false;
 boolean starting = true;
+boolean lost = false;
 int startWait = 300;
 int minesCleared = 0;
 
@@ -113,6 +114,20 @@ void draw()
   } else if (gameState == 3)      // Game state 3: Game over, sub sunk
   {
     aud.hRSSong.pauseAll();
+
+    if (!lost)
+    {
+      int vRMtrk = vRMNum % 4;    // Cycle through 4 tracks to pot...
+      int vRMdir = vRMNum / 4;    // ... either up or down
+      if (vRMdir == 0)
+        aud.vRMHarmo.potUp(vRMtrk, -45.0);  // Not very loud
+      else
+        aud.vRMHarmo.potDn(vRMtrk);
+      //println(vRMNum, vRMtrk, vRMdir);
+      vRMNum = (vRMNum + 1) % 8;  // cycle to next combination for next time
+      lost = true;
+    }
+
     sc.youSankScreen();
   } else if (gameState == 4 && winWait <= 0) // State 4: Game over, player won!
   {
@@ -132,31 +147,31 @@ void draw()
     // else Game state 1: Do next frame
 
     // Update for game state 1 ////////////////////////////////////////////
-    
+
     if (starting)
     {
       hRSSongTrk = 0;
       aud.hRSSong.trigTrans(hRSSongTrk);
       starting = false;
-      
+
       hRSDiaLine  = 0;
       aud.hRSDialog.trigTrans(hRSDiaLine);
     }
-    
+
     startWait--;
     if (startWait == 0)
     {
       hRSDiaLine  = 3;
       aud.hRSDialog.trigTrans(hRSDiaLine);
     }
-    
+
     if (!heavyDamage && sc.health < 50)
     {
       heavyDamage = true;
       hRSDiaLine  = 1;
       aud.hRSDialog.trigTrans(hRSDiaLine);
     }
-    
+
     b1.move();                        // Animate the bubbles
 
     // Maybe create an ambient sonar ping
@@ -373,51 +388,51 @@ void keyPressed()
 
   // The remaining keys are used to test Audio classes and are not
   // really part of the game.
-  if (key == 'm')         // Test the HorReSeq class on looping music
-  {
-    hRSSongTrk++;         // Schedule transition to NEXT track
-    if (hRSSongTrk > 6)   // Start over after song is done
-    {
-      hRSSongTrk = -1;
-      aud.hRSSong.reset();
-    }
-    aud.hRSSong.trigTrans(hRSSongTrk);  // Trigger actual transition
-  }
-  if (key == 'M')         // Test HorReSeq class on looping music
-  {
-    hRSSongTrk--;         // Schedule transition to PREVIOUS track
-    aud.hRSSong.trigTrans(hRSSongTrk);
-  }
-  if (key == 'd')         // Test HorReSeq class on non-looping dialog
-  {
-    hRSDiaLine++;         // Schedule transition to NEXT track
-    if (hRSDiaLine > 5)
-    {
-      hRSDiaLine = -1;
-      aud.hRSDialog.reset();
-    }
-    aud.hRSDialog.trigTrans(hRSDiaLine);
-  }
-  if (key == 'D')         // Test HorReSeq class on non-looping dialog
-  {
-    hRSDiaLine--;         // Schedule transition to PREVIOUS track
-    aud.hRSDialog.trigTrans(hRSDiaLine);
-  }
+  //if (key == 'm')         // Test the HorReSeq class on looping music
+  //{
+  //  hRSSongTrk++;         // Schedule transition to NEXT track
+  //  if (hRSSongTrk > 6)   // Start over after song is done
+  //  {
+  //    hRSSongTrk = -1;
+  //    aud.hRSSong.reset();
+  //  }
+  //  aud.hRSSong.trigTrans(hRSSongTrk);  // Trigger actual transition
+  //}
+  //if (key == 'M')         // Test HorReSeq class on looping music
+  //{
+  //  hRSSongTrk--;         // Schedule transition to PREVIOUS track
+  //  aud.hRSSong.trigTrans(hRSSongTrk);
+  //}
+  //if (key == 'd')         // Test HorReSeq class on non-looping dialog
+  //{
+  //  hRSDiaLine++;         // Schedule transition to NEXT track
+  //  if (hRSDiaLine > 5)
+  //  {
+  //    hRSDiaLine = -1;
+  //    aud.hRSDialog.reset();
+  //  }
+  //  aud.hRSDialog.trigTrans(hRSDiaLine);
+  //}
+  //if (key == 'D')         // Test HorReSeq class on non-looping dialog
+  //{
+  //  hRSDiaLine--;         // Schedule transition to PREVIOUS track
+  //  aud.hRSDialog.trigTrans(hRSDiaLine);
+  //}
 
   // Test VertReMix class with 4 trumpet phrases, harmonized in 3rds
   // Adds tracks one at a time until all playing, then silenes them
   // one at a time until all silent, then repeats.
-  if (key == 'v')
-  {
-    int vRMtrk = vRMNum % 4;    // Cycle through 4 tracks to pot...
-    int vRMdir = vRMNum / 4;    // ... either up or down
-    if (vRMdir == 0)
-      aud.vRMHarmo.potUp(vRMtrk, -45.0);  // Not very loud
-    else
-      aud.vRMHarmo.potDn(vRMtrk);
-    //println(vRMNum, vRMtrk, vRMdir);
-    vRMNum = (vRMNum + 1) % 8;  // cycle to next combination for next time
-  }
+  //if (key == 'v')
+  //{
+  //  int vRMtrk = vRMNum % 4;    // Cycle through 4 tracks to pot...
+  //  int vRMdir = vRMNum / 4;    // ... either up or down
+  //  if (vRMdir == 0)
+  //    aud.vRMHarmo.potUp(vRMtrk, -45.0);  // Not very loud
+  //  else
+  //    aud.vRMHarmo.potDn(vRMtrk);
+  //  //println(vRMNum, vRMtrk, vRMdir);
+  //  vRMNum = (vRMNum + 1) % 8;  // cycle to next combination for next time
+  //}
 }
 
 // Detect all key releases and reset booleans
